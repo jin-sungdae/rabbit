@@ -48,4 +48,5 @@ public class RequestUser {
                 .isMailing(isMailing.equals("true"))
                 .build();
     }
+
 }

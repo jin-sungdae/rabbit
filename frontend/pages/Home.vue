@@ -2,21 +2,6 @@
   <div class="home">
     <div class="top-bar">
       <Header />
-  
-
-      <div class="auth-buttons">
-        <template v-if="!auth.isInitialized.value">
-          <span>로딩 중...</span>
-        </template>
-        <template v-else-if="auth.isLoggedIn.value">
-          <span>환영합니다 {{ auth.userName }}님</span>
-          <button @click="logout">로그아웃</button>
-        </template>
-        <template v-else>
-          <NuxtLink to="/login" class="btn">로그인</NuxtLink>
-          <NuxtLink to="/register" class="btn">회원가입</NuxtLink>
-        </template>
-      </div>
     </div>
   
 
@@ -173,10 +158,7 @@
   }
 
   .top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 20px;
+
   }
 
   .auth-buttons {

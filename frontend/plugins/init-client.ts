@@ -8,19 +8,22 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 //   if (route.path === '/login') return
   try {
 
-    console.log('adfasf')
-    const { data } = await useFetch(`${config.public.apiBase}/me`, {
-    credentials: 'include',
+
+    const response = await fetch(`${config.public.apiBase}/me`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
     })
+
+    const data = await response.json();
 
     console.log(data)
 
-    if (data.value) {
+    if (response.ok && data.success) {
       auth.isLoggedIn.value = true
-      auth.userType.value = data.value.data.role
-      auth.userName.value = data.value.data.userName
+      auth.userType.value = data.data.role
+      auth.userName.value = data.data.userName
     } else {
-      // 서버 응답 없으면 초기화
       auth.isLoggedIn.value = false
       auth.userType.value = null
       auth.userName.value = null

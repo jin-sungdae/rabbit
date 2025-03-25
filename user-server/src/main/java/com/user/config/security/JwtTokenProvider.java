@@ -35,15 +35,16 @@ public class JwtTokenProvider {
     }
 
     public String createAccessToken(User user) {
-        return createAccessToken(user.getUserId(), user.getRole().name(), user.getUserName());
+        return createAccessToken(user.getUserId(), user.getRole().name(), user.getUserName(), user.getUid());
     }
 
-    public String createAccessToken(String userId, String role, String userName) {
+    public String createAccessToken(String userId, String role, String userName, String uid) {
         return JWT.create()
                 .withSubject(userId)
                 .withClaim("userId", userId)
                 .withClaim("roles", role)
                 .withClaim("userName", userName)
+                .withClaim("uid", uid)
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
                 .sign(algorithm);

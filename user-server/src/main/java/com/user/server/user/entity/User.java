@@ -72,4 +72,7 @@ public class User {
         this.isSms = true;
         this.regDate = LocalDateTime.now();
     }
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private SellerProfile sellerProfile;
 }

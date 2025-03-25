@@ -54,10 +54,12 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             String userId = decodedJWT.getClaim("userId").asString();
             String role = decodedJWT.getClaim("roles").asString();
             String userName = decodedJWT.getClaim("userName").asString();
+            String uid = decodedJWT.getClaim("uid").asString();
 
             User user = User.builder()
                     .userId(userId)
                     .userName(userName)
+                    .uid(uid)
                     .role(Role.valueOf(role))
                     .build();
 
