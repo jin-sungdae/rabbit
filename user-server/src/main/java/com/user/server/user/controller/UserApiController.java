@@ -10,6 +10,8 @@ import com.user.server.user.entity.User;
 import com.user.server.user.service.AuthService;
 import com.user.server.user.service.BlacklistTokenService;
 import com.user.server.user.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,29 +80,36 @@ public class UserApiController {
     }
 
 
-
     @PostMapping("/logout")
-    public APIDataResponse<String> logout(@RequestHeader(value = "Authorization", required = false) String accessTokenHeader,
-                                          HttpServletResponse response) {
-        if (accessTokenHeader == null || !accessTokenHeader.startsWith("Bearer ")) {
-            return APIDataResponse.of("true", "이미 로그아웃 상태(토큰 없음)");
+    public APIDataResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        String accessToken = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    accessToken = cookie.getValue();
+                    break;
+                }
+            }
         }
 
-        String accessToken = accessTokenHeader.replace("Bearer ", "");
+        if (accessToken == null) {
+            return APIDataResponse.of("true", "이미 로그아웃 상태(토큰 없음)");
+        }
 
         try {
             String userId = jwtTokenProvider.parseClaims(accessToken).getSubject();
 
-            // Redis refresh token 삭제
+            // 1. Redis refresh token 삭제
             redisUserRefreshRepository.deleteRefreshToken(userId);
 
-            // Access Token 블랙리스트 등록
+            // 2. Access Token 블랙리스트 등록
             long ttl = jwtTokenProvider.getRemainingExpiration(accessToken);
             if (ttl > 0) {
                 blacklistTokenService.addToBlacklist(accessToken, ttl);
             }
 
-            // 클라이언트 쿠키 제거 (HttpOnly는 JS에서 삭제 불가 → 서버가 빈 쿠키로 재설정)
+            // 3. 클라이언트 쿠키 제거
             ResponseCookie expiredAccess = ResponseCookie.from("accessToken", "")
                     .httpOnly(true)
                     .secure(true)

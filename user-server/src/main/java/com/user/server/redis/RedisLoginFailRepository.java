@@ -38,7 +38,6 @@ public class RedisLoginFailRepository {
             redisTemplate.expire(failKey, Duration.ofDays(30)); // 카운트는 최대 30일 보존
         }
 
-        // 지수 증가: 10초 * 3^(failCount - 1)
         long seconds = Math.min((long) (10 * Math.pow(3, failCount - 1)), 30L * 24 * 60 * 60);
 
         redisTemplate.opsForValue().set(lockKey(userId), "LOCKED", seconds, TimeUnit.SECONDS);

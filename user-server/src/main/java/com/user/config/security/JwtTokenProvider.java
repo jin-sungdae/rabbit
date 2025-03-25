@@ -35,19 +35,27 @@ public class JwtTokenProvider {
     }
 
     public String createAccessToken(User user) {
+        return createAccessToken(user.getUserId(), user.getRole().name(), user.getUserName());
+    }
+
+    public String createAccessToken(String userId, String role, String userName) {
         return JWT.create()
-                .withSubject(user.getUserId())
-                .withClaim("userId", user.getUserId())
-                .withClaim("roles", user.getRole().toString())
-                .withClaim("userName", user.getUserName())
+                .withSubject(userId)
+                .withClaim("userId", userId)
+                .withClaim("roles", role)
+                .withClaim("userName", userName)
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
                 .sign(algorithm);
     }
 
     public String createRefreshToken(User user) {
+        return createRefreshToken(user.getUserId());
+    }
+
+    public String createRefreshToken(String userId) {
         return JWT.create()
-                .withSubject(user.getUserId())
+                .withSubject(userId)
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION))
                 .sign(algorithm);

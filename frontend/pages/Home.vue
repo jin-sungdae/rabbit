@@ -3,7 +3,7 @@
     <div class="top-bar">
       <Header />
   
-      
+
       <div class="auth-buttons">
         <template v-if="!auth.isInitialized.value">
           <span>로딩 중...</span>
@@ -39,36 +39,36 @@
           </section>
   
           <!-- 상품 갤러리 -->
-          <section>
+          <!-- <section>
             <h2>추천 상품</h2>
             <ProductGallery :products="featuredProducts" />
           </section>
-  
+   -->
           <!-- 태그 기반 인기 상품 -->
-          <section v-if="popularTags.length">
+          <!-- <section v-if="popularTags.length">
             <div v-for="tag in popularTags" :key="tag.id" class="tag-section">
               <h3>#{{ tag.name }}</h3>
               <ProductGallery :products="tagProductMap[tag.name]" />
             </div>
-          </section>
+          </section> -->
   
           <!-- 인기 브랜드 -->
-          <section v-if="popularBrands.length">
+          <!-- <section v-if="popularBrands.length">
             <h2>브랜드 인기 상품</h2>
             <div v-for="brand in popularBrands" :key="brand.id" class="brand-section">
               <h3>{{ brand.name }}</h3>
               <ProductGallery :products="brandProductMap[brand.name]" />
             </div>
-          </section>
+          </section> -->
   
           <!-- 시리즈 상품 -->
-          <section v-if="seriesList.length">
+          <!-- <section v-if="seriesList.length">
             <h2>시리즈 상품</h2>
             <div v-for="series in seriesList" :key="series.id" class="series-section">
               <h3>{{ series.name }}</h3>
               <ProductGallery :products="seriesProductMap[series.name]" />
             </div>
-          </section>
+          </section> -->
   
         </div>
       </div>

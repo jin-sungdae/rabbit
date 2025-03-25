@@ -1,6 +1,7 @@
 package com.user.config.security;
 
 
+import com.user.server.user.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -26,20 +27,19 @@ public class SecurityConfig {
 
     private final CorsConfig corsConfig;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     @Profile("!test")
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin().disable()
                 .httpBasic().disable()
-                .addFilter(corsConfig.corsFilter())
+                .addFilterBefore(corsConfig.corsFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtAuthorizationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling()
-                .and()
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/refresh",
@@ -50,9 +50,17 @@ public class SecurityConfig {
                                 "/api/v1/user/register",
                                 "/api/v1/user/logout",
                                 "/api/v1/common/**",
-                                "/api/v1/products/**"
+                                "/api/v1/products/**",
+                                "/oauth2/**",
+                                "/login/oauth2/code/*"
                         ).permitAll()
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler(oAuth2SuccessHandler)
                 );
 
         return http.build();

@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class User {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto Increment 설정
     private Long id;
@@ -34,10 +35,10 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String birthday;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true, unique = true)
     private String phoneNo;
 
     @Column()

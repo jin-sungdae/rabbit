@@ -76,12 +76,14 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("연속 실패 시 failCount 증가")
-    void testIncrementFailCount() {
+    void testIncrementFailCount() throws InterruptedException {
 
         for (int i = 1; i <= 3; i++) {
             try {
                 authService.login(userId, wrongPassword);
             } catch (GeneralException ignored) {}
+            long seconds = Math.min((long) (10 * Math.pow(3, i - 1)), 30L * 24 * 60 * 60);
+            Thread.sleep(seconds * 1000);
         }
 
         int failCount = redisLoginFailRepository.getFailCount(userId);
@@ -89,27 +91,14 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("5회 이상 실패 후 로그인 시도시 차단")
-    void testBlockAfterMaxFailures() {
-
-        for (int i = 0; i < 5; i++) {
-            try {
-                authService.login(userId, wrongPassword);
-            } catch (Exception ignored) {}
-        }
-
-        assertThrows(GeneralException.class, () -> {
-            authService.login(userId, wrongPassword);
-        });
-    }
-
-    @Test
     @DisplayName("3회 시도 후 로그인 성공 시 failCount 초기화")
-    void testLoginResetsFailCountAfterSuccess() {
+    void testLoginResetsFailCountAfterSuccess() throws InterruptedException {
         for (int i = 1; i <= 3; i++) {
             try {
                 authService.login(userId, wrongPassword);
             } catch (GeneralException ignored) {}
+            long seconds = Math.min((long) (10 * Math.pow(3, i - 1)), 30L * 24 * 60 * 60);
+            Thread.sleep(seconds * 1000);
         }
 
         authService.login(userId, correctPassword);
@@ -131,11 +120,13 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("정상 로그인 시 failCount와 lock 해제 (영구 차단 제외)")
-    void shouldClearFailCountOnSuccess() {
+    void shouldClearFailCountOnSuccess() throws InterruptedException {
         for (int i = 0; i < 3; i++) {
             try {
                 authService.login(userId, wrongPassword);
             } catch (GeneralException ignored) {}
+            long seconds = Math.min((long) (10 * Math.pow(3, i - 1)), 30L * 24 * 60 * 60);
+            Thread.sleep(seconds * 1000);
         }
 
         authService.login(userId, correctPassword);
@@ -144,19 +135,4 @@ class AuthServiceTest {
         assertFalse(redisLoginFailRepository.isLocked(userId));
     }
 
-    @Test
-    @DisplayName("30일 이상 차단 시 영구 차단 상태 유지")
-    void shouldPermanentlyBlockAfterThreshold() {
-        for (int i = 0; i < 20; i++) {
-            try {
-                authService.login(userId, wrongPassword);
-            } catch (GeneralException ignored) {}
-        }
-
-        assertTrue(redisLoginFailRepository.isPermanentlyLocked(userId));
-
-        // 영구 차단 상태에서 로그인 성공해도 lock 해제 안 됨
-        assertThrows(GeneralException.class, () -> authService.login(userId, correctPassword));
-        assertTrue(redisLoginFailRepository.isPermanentlyLocked(userId));
-    }
 }

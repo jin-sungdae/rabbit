@@ -8,9 +8,6 @@ export const useLogout = () => {
         const res = await fetch(`${config.public.apiBase}/api/v1/user/logout`, {
           method: 'POST',
           credentials: 'include',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
         })
   
     
@@ -27,3 +24,4 @@ export const useLogout = () => {
   
     return { logout }
   }
+

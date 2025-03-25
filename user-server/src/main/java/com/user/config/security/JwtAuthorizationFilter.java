@@ -32,6 +32,11 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
+        String uri = request.getRequestURI();
+        if (uri.startsWith("/login/oauth2/code/") || uri.startsWith("/oauth2/")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         String jwtHeader = resolveTokenFromRequest(request);
 
@@ -39,6 +44,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             chain.doFilter(request, response);
             return;
         }
+
+
 
         try {
             String token = jwtHeader.replace("Bearer ", "");

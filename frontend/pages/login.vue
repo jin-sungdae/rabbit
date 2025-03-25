@@ -13,12 +13,34 @@
       />
       <input
           type="password"
-          v-model="loginInfo.password"
+          v-model="loginInfo.userPassword"
           placeholder="비밀번호"
           required
       />
+
+
       <button type="submit">로그인</button>
     </form>
+
+    <hr />
+    <div class="social-login-section">
+      <h2>소셜 로그인</h2>
+
+      <!-- 카카오 로그인 버튼 -->
+      <button @click="loginWith('kakao')" class="social-btn kakao">
+        카카오로 로그인
+      </button>
+
+      <!-- 구글 로그인 버튼 -->
+      <button @click="loginWith('google')" class="social-btn google">
+        구글로 로그인
+      </button>
+
+      <!-- 네이버 로그인 버튼 -->
+      <button @click="loginWith('naver')" class="social-btn naver">
+        네이버로 로그인
+      </button>
+    </div>
 
     <!-- 로그인 결과 메시지 -->
     <p v-if="message">{{ message }}</p>
@@ -42,7 +64,7 @@ const auth = useAuth()
 
 const loginInfo = ref({
   userId: '',
-  password: ''
+  userPassword: ''
 })
 
 const message = ref('')
@@ -54,7 +76,7 @@ const login = async () => {
     const response = await fetch(`${config.public.apiBase}/api/v1/user/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // <- 반드시 필요 (HttpOnly 쿠키 받기 위함)
+      credentials: 'include',
       body: JSON.stringify(loginInfo.value)
     })
 
@@ -83,6 +105,14 @@ const login = async () => {
     console.error('로그인 중 오류:', error)
     message.value = '로그인 중 오류 발생'
   }
+}
+
+const loginWith = (provider) => {
+  // Spring 서버 주소 (API 주소랑 다를 수 있음)
+  const springBaseUrl = 'http://localhost:1113'
+
+  const redirectUrl = `${springBaseUrl}/oauth2/authorization/${provider}`
+  window.location.href = redirectUrl
 }
 
 const goRegisterPage = () => {
@@ -123,5 +153,38 @@ function parseJwt(token) {
   color: #fff;
   border: none;
   cursor: pointer;
+}
+
+.social-login-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.social-btn {
+  width: 250px;
+  max-width: 90%;
+  padding: 12px;
+  margin: 10px auto;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: block;
+}
+
+.kakao {
+  background-color: #FEE500;
+  color: #3C1E1E;
+}
+
+.google {
+  background-color: #DB4437;
+  color: #fff;
+}
+
+.naver {
+  background-color: #03C75A;
+  color: #fff;
 }
 </style>
