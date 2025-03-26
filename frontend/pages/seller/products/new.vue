@@ -8,12 +8,12 @@
           <input v-model="form.name" type="text" required />
         </label>
   
-        <!-- ✅ 메인 이미지 업로드 -->
+        <!-- 메인 이미지 업로드 -->
         <label class="form-label">
           메인 이미지
           <div class="upload-box" @click="triggerMainInput">
             <span v-if="!mainPreview">클릭하여 메인 이미지 선택</span>
-            <!-- <img v-if="mainPreview" :src="mainPreview" alt="Main Preview" /> -->
+            <img v-if="mainPreview" :src="mainPreview" alt="Main Preview" />
           </div>
           <input
             ref="mainInput"
@@ -24,7 +24,7 @@
           />
         </label>
   
-        <!-- ✅ 서브 이미지 업로드 -->
+        <!-- 서브 이미지 업로드 -->
         <label class="form-label">
           서브 이미지 (최대 3장)
           <div class="upload-multi">
