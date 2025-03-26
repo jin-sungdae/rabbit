@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class SellerProfileController {
 
     private final SellerProfileService sellerProfileService;
+
     @PostMapping("/apply")
     public APIDataResponse<String> applySeller(
             @AuthenticationPrincipal PrincipalDetails principal,

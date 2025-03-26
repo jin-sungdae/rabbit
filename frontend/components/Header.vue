@@ -23,6 +23,7 @@
         </template>
 
         <template v-else-if="auth.isLoggedIn.value">
+          <NuxtLink v-if="isSeller" to="/seller/dashboard" class="btn small seller-btn">판매자센터</NuxtLink>
           <NuxtLink :to="mypageUrl" class="btn small">마이페이지</NuxtLink>
           <button class="btn small" @click="handleLogout">로그아웃</button>
         </template>
@@ -51,7 +52,7 @@ const handleLogout = async () => {
 
 const user = computed(() => auth.isLoggedIn?.value)
 const isSeller = computed(() => auth.userType?.value === 'SELLER')
-const mypageUrl = computed(() => user.value ? (isSeller.value ? '/seller/mypage' : '/mypage') : '/login')
+const mypageUrl = computed(() => user.value ? (isSeller.value ? '/mypage' : '/mypage') : '/login')
 
 </script>
 
@@ -123,4 +124,13 @@ const mypageUrl = computed(() => user.value ? (isSeller.value ? '/seller/mypage'
   font-size: 14px;
   color: #888;
 }
+
+.seller-btn {
+  background-color: #0c7b5e;
+}
+
+.seller-btn:hover {
+  background-color: #055f46;
+}
+
 </style>

@@ -1,7 +1,9 @@
 package com.user.server.user.service;
 
 import com.common.config.api.exception.GeneralException;
+import com.user.server.redis.RedisUserInfoRepository;
 import com.user.server.user.dto.RequestSellerProfile;
+import com.user.server.user.dto.ResponseUser;
 import com.user.server.user.entity.Role;
 import com.user.server.user.entity.SellerProfile;
 import com.user.server.user.entity.User;
@@ -17,6 +19,7 @@ public class SellerProfileService {
 
     private final UserRepository userRepository;
     private final SellerProfileRepository sellerProfileRepository;
+    private final RedisUserInfoRepository redisUserInfoRepository;
 
     @Transactional
     public void applySeller(String uid, RequestSellerProfile dto) {
@@ -37,5 +40,14 @@ public class SellerProfileService {
         sellerProfileRepository.save(profile);
         user.setRole(Role.SELLER);
         user.setSellerProfile(profile);
+
+        ResponseUser responseUser = ResponseUser.builder()
+                .userId(user.getUserId())
+                .userName(user.getUserName())
+                .role(user.getRole())
+                .build();
+
+        redisUserInfoRepository.deleteUser(uid);
+        redisUserInfoRepository.saveUser(uid, responseUser);
     }
 }

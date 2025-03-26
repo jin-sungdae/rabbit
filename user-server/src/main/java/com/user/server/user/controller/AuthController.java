@@ -6,10 +6,12 @@ import com.common.config.api.exception.GeneralException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.user.config.security.JwtTokenProvider;
 import com.user.config.security.PrincipalDetails;
+import com.user.server.redis.RedisUserInfoRepository;
 import com.user.server.redis.RedisUserRefreshRepository;
 import com.user.server.user.dto.ResponseUser;
 import com.user.server.user.entity.User;
 import com.user.server.user.service.UserService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.Optional;
 
 @RestController
 @Slf4j
@@ -27,8 +30,10 @@ public class AuthController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisUserRefreshRepository redisUserRefreshRepository;
+    private final RedisUserInfoRepository redisUserInfoRepository;
 
     @PostMapping("/refresh")
+    @RateLimiter(name = "refreshToken", fallbackMethod = "rateLimitFallback")
     public APIDataResponse<String> refreshToken(@CookieValue(name = "refreshToken", required = false) String refreshToken,
                                                 HttpServletResponse response) throws JsonProcessingException {
 
@@ -71,15 +76,24 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @RateLimiter(name = "getMyInfo", fallbackMethod = "rateLimitFallback")
     public APIDataResponse<ResponseUser> getMyInfo(@AuthenticationPrincipal PrincipalDetails principal) {
-        User user = principal.getUser();
-        return APIDataResponse.of(
-                ResponseUser.builder()
-                        .userId(user.getUserId())
-                        .userName(user.getUserName())
-                        .role(user.getRole())
-                        .build()
-        );
+        String uid = principal.getUser().getUid();
+
+        Optional<ResponseUser> cached = redisUserInfoRepository.getUserInfo(uid);
+
+        if (cached.isPresent()) {
+            return APIDataResponse.of(cached.get());
+        }
+
+        ResponseUser dto = userService.saveUserInfoByCache(uid);
+
+        return APIDataResponse.of(dto);
+
+    }
+
+    public APIDataResponse<String> rateLimitFallback(Exception e) {
+        return APIDataResponse.of("false", "요청이 너무 많습니다. 잠시 후 다시 시도하세요.");
     }
 
 }

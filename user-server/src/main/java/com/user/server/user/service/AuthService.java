@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +20,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final RedisUserRefreshRepository redisUserRefreshRepository;
     private final RedisLoginFailRepository redisLoginFailRepository;
-    private static final long REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000L;
+    private static final Duration REFRESH_TOKEN_EXPIRATION = Duration.ofDays(7);
 
 
     public void saveRefreshToken(String userId, String refreshToken) {

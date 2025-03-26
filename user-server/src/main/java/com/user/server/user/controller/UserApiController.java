@@ -10,6 +10,7 @@ import com.user.server.user.entity.User;
 import com.user.server.user.service.AuthService;
 import com.user.server.user.service.BlacklistTokenService;
 import com.user.server.user.service.UserService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,6 +34,7 @@ public class UserApiController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/register")
+    @RateLimiter(name = "createUser", fallbackMethod = "rateLimitFallback")
     public APIDataResponse<String> createUser(@RequestBody RequestUser requestUser) {
 
         userService.createUser(requestUser);
@@ -40,6 +42,7 @@ public class UserApiController {
     }
 
     @PostMapping(value = "/login")
+    @RateLimiter(name = "login", fallbackMethod = "rateLimitFallback")
     public APIDataResponse<ResponseUser> login(@RequestBody RequestUser requestUser, HttpServletResponse response) {
 
         // 1. 아이디/비밀번호 검증
@@ -71,6 +74,9 @@ public class UserApiController {
 
         response.addHeader("Set-Cookie", cookie.toString());
         response.addHeader("Set-Cookie", refreshCookie.toString());
+
+        // 4. user info redis 에 저장
+        userService.saveUserInfoByCache(user.getUid());
 
         return APIDataResponse.of(ResponseUser.builder()
                 .userId(user.getUserId())
@@ -140,6 +146,10 @@ public class UserApiController {
     @GetMapping("/test")
     public APIDataResponse<String> test() {
         return APIDataResponse.of(Boolean.toString(true));
+    }
+
+    public APIDataResponse<String> rateLimitFallback(Exception e) {
+        return APIDataResponse.of("false", "요청이 너무 많습니다. 잠시 후 다시 시도하세요.");
     }
 
 }

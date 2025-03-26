@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Repository
@@ -23,7 +24,7 @@ public class RedisUserRefreshRepository {
     private static final String REFRESH_TOKEN_KEY = "user:%s:refreshToken";
 
 
-    public void saveRefreshToken(String userId, String refreshToken, long expiration) {
+    public void saveRefreshToken(String userId, String refreshToken, Duration expiration) {
         String key = String.format(REFRESH_TOKEN_KEY, userId);
 
         // JSON 형태로 저장할 데이터 (RefreshToken + IP주소 등)
@@ -31,7 +32,7 @@ public class RedisUserRefreshRepository {
 
         try {
             String value = objectMapper.writeValueAsString(refreshTokenData);
-            redisTemplate.opsForValue().set(key, value, expiration, TimeUnit.MILLISECONDS);
+            redisTemplate.opsForValue().set(key, value, expiration);
             log.info("Redis에 Refresh Token 저장: {}", key);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Redis 저장 오류", e);

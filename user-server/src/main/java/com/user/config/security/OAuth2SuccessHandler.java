@@ -6,6 +6,7 @@ import com.user.server.user.dto.CustomUserPrincipal;
 import com.user.server.user.entity.Role;
 import com.user.server.user.entity.User;
 import com.user.server.user.service.AuthService;
+import com.user.server.user.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,8 +30,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisLoginFailRepository redisLoginFailRepository;
     private final RedisUserRefreshRepository redisUserRefreshRepository;
-    private static final long REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000L;
-
+    private static final Duration REFRESH_TOKEN_EXPIRATION = Duration.ofDays(7);
+    private final UserService userService;
 
 
     @Override
@@ -68,6 +69,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         response.addHeader("Set-Cookie", cookie.toString());
         response.addHeader("Set-Cookie", refreshCookie.toString());
+
+        // 4. user info redis 에 저장
+        userService.saveUserInfoByCache(user.getUid());
 
         getRedirectStrategy().sendRedirect(request, response, frontUrl + "/home");
     }
