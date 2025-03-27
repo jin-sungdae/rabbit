@@ -34,15 +34,15 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         String uri = request.getRequestURI();
-        if (uri.startsWith("/login/oauth2/code/") || uri.startsWith("/oauth2/")) {
+
+        if (uri.startsWith("/public/") || uri.startsWith("/login") || uri.startsWith("/api/v1/user/login") || uri.startsWith("/oauth2") || uri.startsWith("/login/oauth2/code/") || uri.startsWith("/refresh")) {
             chain.doFilter(request, response);
             return;
         }
-
         String jwtHeader = resolveTokenFromRequest(request);
 
         if (jwtHeader == null || !jwtHeader.startsWith("Bearer ")) {
-            chain.doFilter(request, response);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing JWT Token");
             return;
         }
 

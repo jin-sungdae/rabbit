@@ -60,7 +60,7 @@ public class UserApiController {
                 .secure(true)
                 .path("/")
                 .sameSite("Strict")
-                .maxAge(Duration.ofMinutes(15))
+                .maxAge(Duration.ofMinutes(2))
                 .build();
 
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
