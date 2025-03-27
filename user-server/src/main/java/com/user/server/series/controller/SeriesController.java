@@ -1,7 +1,7 @@
 package com.user.server.series.controller;
 
 import com.common.config.api.apidto.APIDataResponse;
-import com.user.server.product.dto.ProductResponseDto;
+import com.user.server.product.dto.ResponseProductDto;
 import com.user.server.series.dto.SeriesDto;
 import com.user.server.series.service.SeriesService;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +26,9 @@ public class SeriesController {
     }
 
     @GetMapping("/{seriesId}/products")
-    public APIDataResponse<List<ProductResponseDto>> getProductsBySeries(@PathVariable Long seriesId) {
+    public APIDataResponse<List<ResponseProductDto>> getProductsBySeries(@PathVariable Long seriesId) {
 
-        List<ProductResponseDto> products = seriesService.getProductsBySeries(seriesId);
+        List<ResponseProductDto> products = seriesService.getProductsBySeries(seriesId);
 
         return APIDataResponse.of(products);
     }

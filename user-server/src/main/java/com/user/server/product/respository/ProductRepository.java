@@ -7,9 +7,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+
 import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
+
+    @Query("SELECT p FROM Product p JOIN p.sellerProfile s JOIN s.user u WHERE u.uid = :uid ")
+    Page<Product> findAllByUserUid(@Param("uid") String uid, Pageable pageable);
 
     List<Product> findByIsFeaturedTrue();
 
@@ -25,4 +29,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllByTagName(@Param("tagName") String tagName);
 
     List<Product> findByBrandId(Long brandId);
+
+    Product findByUid(String productUid);
+
+    List<Product> findAllBySellerProfileId(Long sellerProfileId);
 }

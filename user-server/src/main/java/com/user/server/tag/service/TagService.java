@@ -1,6 +1,6 @@
 package com.user.server.tag.service;
 
-import com.user.server.product.dto.ProductResponseDto;
+import com.user.server.product.dto.ResponseProductDto;
 import com.user.server.product.entity.Product;
 import com.user.server.product.respository.ProductRepository;
 import com.user.server.tag.dto.PopularTagResponse;
@@ -29,9 +29,9 @@ public class TagService {
                 .collect(Collectors.toList());
     }
 
-    public List<ProductResponseDto> getProductsByTag(String tagName) {
+    public List<ResponseProductDto> getProductsByTag(String tagName) {
         return findProductsByTagName(tagName).stream()
-                .map(ProductResponseDto::from)
+                .map(ResponseProductDto::from)
                 .collect(Collectors.toList());
     }
 

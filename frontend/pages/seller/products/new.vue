@@ -4,12 +4,12 @@
   
       <form class="form" @submit.prevent="handleSubmit">
         <label class="form-label">
-          상품명
-          <input v-model="form.name" type="text" required />
+            상품명 (기본 이름)
+            <input v-model="form.defaultName" type="text" required />
         </label>
   
         <!-- 메인 이미지 업로드 -->
-        <label class="form-label">
+        <div class="form-label">
           메인 이미지
           <div class="upload-box" @click="triggerMainInput">
             <span v-if="!mainPreview">클릭하여 메인 이미지 선택</span>
@@ -22,10 +22,10 @@
             @change="handleMainImage"
             style="display: none"
           />
-        </label>
+        </div>
   
         <!-- 서브 이미지 업로드 -->
-        <label class="form-label">
+        <div class="form-label">
           서브 이미지 (최대 3장)
           <div class="upload-multi">
             <div
@@ -52,23 +52,45 @@
               style="display: none"
             />
           </div>
-        </label>
+        </div>
   
         <label class="form-label">
-          가격
-          <input v-model.number="form.price" type="number" required />
-        </label>
-  
-        <label class="form-label">
-          설명
-          <textarea v-model="form.description" rows="4"></textarea>
-        </label>
-  
-        <label class="form-label">
-          재고 수량
-          <input v-model.number="form.stock" type="number" required />
-        </label>
-  
+        제품 코드
+        <input v-model="form.productCode" type="text" required />
+      </label>
+
+      <label class="form-label">
+        제품 타입
+        <input v-model="form.productType" type="text" required />
+      </label>
+
+      <label class="form-label">
+        상품 설명
+        <v-md-editor v-model="form.description" height="400px" />
+      </label>
+
+      <label class="form-label">
+        대표 상품 여부 (isFeatured)
+        <select v-model="form.isFeatured" required>
+          <option :value="true">대표 상품</option>
+          <option :value="false">일반 상품</option>
+        </select>
+      </label>
+
+      <label class="form-label">
+        판매 여부 (isActive)
+        <select v-model="form.isActive" required>
+          <option :value="true">판매중</option>
+          <option :value="false">판매중지</option>
+        </select>
+      </label>
+
+      <label class="form-label">
+        브랜드 ID (임시)
+        <input v-model="form.brandId" type="text" required />
+        <!-- 실제로는 브랜드 목록을 불러와 드롭다운 처리 예정 -->
+      </label>
+        
         <button type="submit" class="submit-btn">등록</button>
       </form>
     </section>
@@ -76,17 +98,13 @@
   
   <script setup lang="ts">
   definePageMeta({ layout: 'seller' })
+import { fi } from '@nuxt/ui/runtime/locale/index.js'
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
   
   const router = useRouter()
-  
-  const form = ref({
-    name: '',
-    price: 0,
-    description: '',
-    stock: 0
-  })
+  const config = useRuntimeConfig()
+
   
   const mainImage = ref<File | null>(null)
   const mainPreview = ref<string | null>(null)
@@ -97,6 +115,7 @@
   const subInput = ref<HTMLInputElement | null>(null)
   
   const triggerMainInput = () => {
+    console.log('iii')
     if (mainInput.value) {
         mainInput.value.value = ''
         mainInput.value?.click()
@@ -134,39 +153,68 @@
     subImages.value.splice(index, 1)
     subPreviews.value.splice(index, 1)
   }
+
   
-  const handleSubmit = async () => {
-    const formData = new FormData()
-    formData.append('name', form.value.name)
-    formData.append('price', form.value.price.toString())
-    formData.append('description', form.value.description)
-    formData.append('stock', form.value.stock.toString())
-  
-    if (mainImage.value) {
-      formData.append('mainImage', mainImage.value)
+
+const form = ref({
+  defaultName: '',
+  productCode: '',
+  productType: '',
+  description: '',
+  isFeatured: false,
+  isActive: true,
+  brandId: null,
+})
+
+
+
+const createProduct = async (form) => {
+  const res = await fetch(`${config.public.apiBase}/api/v1/products/register?`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(form),
+  })
+
+  if (!res.ok) throw new Error('상품 정보 등록 실패')
+
+  const data = await res.json()
+
+  return data.data; 
+}
+
+const uploadFile = async (file, productUid) => {
+  const encodedName = encodeURIComponent(file.name)
+  const res = await fetch(`${config.public.apiBase}/api/v1/files/upload?filename=${encodedName}&parentUid=${productUid}&parentType=PRODUCT_MAIN`, {
+    method: 'POST',
+    body: file,
+    credentials: 'include'
+  })
+
+  if (!res.ok) throw new Error('파일 업로드 실패')
+
+  return await res.json()
+}
+
+// 폼 전체 제출 핸들러
+const handleSubmit = async () => {
+  try {
+    const productUid = await createProduct(form.value)
+
+    console.log(productUid);
+    const uploadRes = await uploadFile(mainImage.value, productUid)
+
+    if (uploadRes.success) {
+      alert('상품과 이미지 등록 성공')
+      await router.push('/seller/products')
+    } else {
+      alert('이미지 등록 실패')
     }
-  
-    subImages.value.forEach((file, idx) => {
-      formData.append(`subImages`, file)
-    })
-  
-    try {
-      const res = await fetch('/api/v1/products', {
-        method: 'POST',
-        credentials: 'include',
-        body: formData
-      })
-  
-      if (res.ok) {
-        alert('상품이 등록되었습니다.')
-        await router.push('/seller/products')
-      } else {
-        alert('등록 실패')
-      }
-    } catch (e) {
-      alert('서버 오류 발생')
-    }
+  } catch (e) {
+    console.error(e)
+    alert(e.message || '네트워크 오류 발생')
   }
+}
   </script>
   
   <style scoped>

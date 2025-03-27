@@ -1,6 +1,6 @@
 package com.user.server.series.service;
 
-import com.user.server.product.dto.ProductResponseDto;
+import com.user.server.product.dto.ResponseProductDto;
 import com.user.server.series.dto.SeriesDto;
 
 import com.user.server.series.entity.ProductSeriesMapping;
@@ -25,12 +25,12 @@ public class SeriesService {
                 .collect(Collectors.toList());
     }
 
-    public List<ProductResponseDto> getProductsBySeries(Long seriesId) {
+    public List<ResponseProductDto> getProductsBySeries(Long seriesId) {
         List<ProductSeriesMapping> mappings = mappingRepository.findBySeriesId(seriesId);
 
         return mappings.stream()
                 .map(ProductSeriesMapping::getProduct)
-                .map(ProductResponseDto::from)
+                .map(ResponseProductDto::from)
                 .collect(Collectors.toList());
     }
 }

@@ -1,9 +1,8 @@
 package com.user.server.series.service;
 
 
-import com.user.server.product.dto.ProductResponseDto;
+import com.user.server.product.dto.ResponseProductDto;
 import com.user.server.product.entity.Product;
-import com.user.server.series.entity.ProductSeries;
 import com.user.server.series.entity.ProductSeriesMapping;
 
 import com.user.server.series.repository.SeriesMappingRepository;
@@ -15,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.List;
-import java.util.Collections;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,7 +42,7 @@ class SeriesServiceTest {
 
         when(mappingRepository.findBySeriesId(seriesId)).thenReturn(List.of(mapping));
 
-        List<ProductResponseDto> result = seriesService.getProductsBySeries(seriesId);
+        List<ResponseProductDto> result = seriesService.getProductsBySeries(seriesId);
         assertEquals(1, result.size());
         assertEquals("ProductA", result.get(0).getDefaultName());
     }

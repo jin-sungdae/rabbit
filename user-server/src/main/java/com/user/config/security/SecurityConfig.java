@@ -1,6 +1,8 @@
 package com.user.config.security;
 
 
+import com.user.server.redis.RedisUserRefreshRepository;
+import com.user.server.user.repository.UserRepository;
 import com.user.server.user.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +31,8 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
-
+    private final UserRepository userRepository;
+    private final RedisUserRefreshRepository redisUserRefreshRepository;
     @Bean
     @Profile({"local", "dev", "prod"})
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -39,12 +42,13 @@ public class SecurityConfig {
                 .formLogin().disable()
                 .httpBasic().disable()
                 .addFilterBefore(corsConfig.corsFilter(), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new JwtAuthorizationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthorizationFilter(jwtTokenProvider, userRepository, redisUserRefreshRepository), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/refresh",
                                 "/auth",
                                 "/",
+                                "/api/v1/files/upload",
                                 "/api/v1/user/test",
                                 "/api/v1/user/login",
                                 "/api/v1/user/register",

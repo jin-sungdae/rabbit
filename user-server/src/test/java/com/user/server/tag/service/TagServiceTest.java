@@ -1,6 +1,6 @@
 package com.user.server.tag.service;
 
-import com.user.server.product.dto.ProductResponseDto;
+import com.user.server.product.dto.ResponseProductDto;
 
 import com.user.server.product.entity.Product;
 import com.user.server.product.respository.ProductRepository;
@@ -46,7 +46,7 @@ class TagServiceTest {
 
         when(productRepository.findAllByTagName(tag)).thenReturn(List.of(product));
 
-        List<ProductResponseDto> result = tagService.getProductsByTag(tag);
+        List<ResponseProductDto> result = tagService.getProductsByTag(tag);
         assertEquals(1, result.size());
         assertEquals("Eco Product", result.get(0).getDefaultName());
     }

@@ -3,6 +3,7 @@ package com.user.server.user.service;
 import com.common.config.api.exception.GeneralException;
 import com.user.server.redis.RedisUserInfoRepository;
 import com.user.server.user.dto.RequestSellerProfile;
+import com.user.server.user.dto.ResponseSellerProfile;
 import com.user.server.user.dto.ResponseUser;
 import com.user.server.user.entity.Role;
 import com.user.server.user.entity.SellerProfile;
@@ -12,6 +13,8 @@ import com.user.server.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.security.interfaces.EdECKey;
 
 @Service
 @RequiredArgsConstructor
@@ -49,5 +52,43 @@ public class SellerProfileService {
 
         redisUserInfoRepository.deleteUser(uid);
         redisUserInfoRepository.saveUser(uid, responseUser);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseSellerProfile getSellerProfile(String uid) {
+        try {
+            User user = userRepository.findByUid(uid)
+                    .orElseThrow(() -> new GeneralException("사용자를 찾을 수 없습니다."));
+
+            SellerProfile profile = user.getSellerProfile();
+
+            return ResponseSellerProfile.builder()
+                    .shopName(profile.getShopName())
+                    .contact(profile.getContact())
+                    .description(profile.getDescription())
+                    .build();
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public void updateSellerProfile(String uid, RequestSellerProfile dto) {
+        try {
+            User user = userRepository.findByUid(uid)
+                    .orElseThrow(() -> new GeneralException("사용자를 찾을 수 없습니다."));
+
+            SellerProfile profile = user.getSellerProfile();
+            profile.setShopName(dto.getShopName());
+            profile.setContact(dto.getContact());
+            profile.setDescription(dto.getDescription());
+
+            sellerProfileRepository.save(profile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

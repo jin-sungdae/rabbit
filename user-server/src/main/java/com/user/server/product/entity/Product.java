@@ -2,9 +2,11 @@ package com.user.server.product.entity;
 
 import com.user.server.brand.entity.ProductBrand;
 import com.user.server.category.entity.ProductCategoryMapping;
+import com.user.server.file.entity.File;
 import com.user.server.review.entity.ProductExternalReview;
 import com.user.server.series.entity.ProductSeriesMapping;
 import com.user.server.tag.entity.ProductTagMapping;
+import com.user.server.user.entity.SellerProfile;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,6 +28,9 @@ public class Product {
     @Column(name = "PRODUCT_ID")
     private Long id;
 
+    @Column(name = "uid", nullable = false, unique = true)
+    private String uid;
+
     @Column(name = "PRODUCT_CODE", nullable = false, unique = true)
     private String productCode;
 
@@ -41,6 +46,10 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "BRAND_ID")
     private ProductBrand brand;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_profile_id")
+    private SellerProfile sellerProfile;
 
     @Column(name = "IS_ACTIVE", nullable = false)
     private boolean isActive = true;
@@ -71,6 +80,9 @@ public class Product {
     // === 연관관계 === //
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<File> files = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductOptionGroup> optionGroups = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -96,4 +108,5 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductExternalReview> externalReviews = new ArrayList<>();
+
 }

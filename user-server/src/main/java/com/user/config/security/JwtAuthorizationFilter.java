@@ -1,11 +1,11 @@
 package com.user.config.security;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.user.server.redis.RedisUserRefreshRepository;
 import com.user.server.user.entity.Role;
 import com.user.server.user.entity.User;
+import com.user.server.user.repository.UserRepository;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -13,21 +13,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Duration;
 
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
+    private final RedisUserRefreshRepository redisUserRefreshRepository;
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -45,27 +46,71 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             return;
         }
 
-
-
         try {
             String token = jwtHeader.replace("Bearer ", "");
-            DecodedJWT decodedJWT = jwtTokenProvider.parseClaims(token);
 
-            String userId = decodedJWT.getClaim("userId").asString();
-            String role = decodedJWT.getClaim("roles").asString();
-            String userName = decodedJWT.getClaim("userName").asString();
-            String uid = decodedJWT.getClaim("uid").asString();
+            if (jwtTokenProvider.isExpired(token)) {
+                String refreshToken = resolveRefreshTokenFromRequest(request);
 
-            User user = User.builder()
-                    .userId(userId)
-                    .userName(userName)
-                    .uid(uid)
-                    .role(Role.valueOf(role))
-                    .build();
+                if (refreshToken != null && jwtTokenProvider.validateRefreshToken(refreshToken)) {
+                    String userId = jwtTokenProvider.getUserIdFromRefreshToken(refreshToken);
 
-            PrincipalDetails principalDetails = new PrincipalDetails(user);
-            Authentication authentication = new UsernamePasswordAuthenticationToken(principalDetails, null, principalDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+
+                    User user = userRepository.findByUserId(userId).orElseThrow(
+                            () -> new IllegalArgumentException("사용자를 찾을 수 없습니다.")
+                    );
+
+                    String newAccessToken = jwtTokenProvider.createAccessToken(user);
+                    response.setHeader("Authorization", "Bearer " + newAccessToken);
+
+                    PrincipalDetails principalDetails = new PrincipalDetails(user);
+                    Authentication authentication = new UsernamePasswordAuthenticationToken(
+                            principalDetails, null, principalDetails.getAuthorities()
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                    String newRefreshToken = jwtTokenProvider.createRefreshToken(user);
+                    redisUserRefreshRepository.saveRefreshToken(userId, newRefreshToken, Duration.ofDays(7));
+
+                    Cookie newRefreshCookie = new Cookie("refreshToken", newRefreshToken);
+                    newRefreshCookie.setHttpOnly(true);
+                    newRefreshCookie.setSecure(true);
+                    newRefreshCookie.setPath("/");
+                    newRefreshCookie.setMaxAge(7 * 24 * 60 * 60);
+                    response.addCookie(newRefreshCookie);
+
+                    Cookie newAccessCookie = new Cookie("accessToken", newAccessToken);
+                    newAccessCookie.setHttpOnly(true);
+                    newAccessCookie.setSecure(true);
+                    newAccessCookie.setPath("/");
+                    newAccessCookie.setMaxAge(15 * 60);
+                    response.addCookie(newAccessCookie);
+
+                } else {
+                    throw new JwtException("AccessToken expired and RefreshToken invalid");
+                }
+            } else {
+                DecodedJWT decodedJWT = jwtTokenProvider.parseClaims(token);
+
+                String userId = decodedJWT.getClaim("userId").asString();
+                String role = decodedJWT.getClaim("roles").asString();
+                String userName = decodedJWT.getClaim("userName").asString();
+                String uid = decodedJWT.getClaim("uid").asString();
+
+                User user = User.builder()
+                        .userId(userId)
+                        .userName(userName)
+                        .uid(uid)
+                        .role(Role.valueOf(role))
+                        .build();
+
+                PrincipalDetails principalDetails = new PrincipalDetails(user);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                        principalDetails, null, principalDetails.getAuthorities()
+                );
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
 
         } catch (Exception e) {
             log.warn("[JwtAuthorizationFilter] 토큰 파싱 실패: {}", e.getMessage());
@@ -88,7 +133,17 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 }
             }
         }
+        return null;
+    }
 
+    private String resolveRefreshTokenFromRequest(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
         return null;
     }
 }

@@ -2,11 +2,10 @@ package com.user.server.brand.service;
 
 import com.user.server.brand.entity.ProductBrand;
 import com.user.server.brand.repository.BrandRepository;
-import com.user.server.product.dto.ProductResponseDto;
+import com.user.server.product.dto.ResponseProductDto;
 import com.user.server.product.entity.Product;
 import com.user.server.product.respository.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,10 +18,10 @@ public class BrandService {
     private final BrandRepository productBrandRepository;
     private final ProductRepository productRepository;
 
-    public List<ProductResponseDto> getProductsByBrand(Long brandId) {
+    public List<ResponseProductDto> getProductsByBrand(Long brandId) {
         List<Product> products = productRepository.findByBrandId(brandId);
         return products.stream()
-                .map(ProductResponseDto::from)
+                .map(ResponseProductDto::from)
                 .collect(Collectors.toList());
     }
 

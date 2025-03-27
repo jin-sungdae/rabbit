@@ -15,6 +15,7 @@ export const useAuth = () => {
             credentials: 'include'
         })
         const data = await res.json()
+        console.log('asdfasdfas')
 
         if (res.ok && data.success) {
             isLoggedIn.value = true

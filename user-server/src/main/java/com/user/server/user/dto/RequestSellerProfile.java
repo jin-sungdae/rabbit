@@ -1,14 +1,12 @@
 package com.user.server.user.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
+@Builder
 public class RequestSellerProfile {
     private String shopName;
     private String contact;

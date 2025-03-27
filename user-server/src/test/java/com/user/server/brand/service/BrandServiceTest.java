@@ -1,6 +1,6 @@
 package com.user.server.brand.service;
 
-import com.user.server.product.dto.ProductResponseDto;
+import com.user.server.product.dto.ResponseProductDto;
 import com.user.server.product.entity.Product;
 import com.user.server.product.respository.ProductRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +33,7 @@ class BrandServiceTest {
         Product product = Product.builder().id(1L).defaultName("BrandX Product").build();
         when(productRepository.findByBrandId(brandId)).thenReturn(List.of(product));
 
-        List<ProductResponseDto> result = brandService.getProductsByBrand(brandId);
+        List<ResponseProductDto> result = brandService.getProductsByBrand(brandId);
         assertEquals(1, result.size());
         assertEquals("BrandX Product", result.get(0).getDefaultName());
     }

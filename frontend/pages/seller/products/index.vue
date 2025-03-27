@@ -7,46 +7,87 @@
         <NuxtLink to="/seller/products/new" class="btn">+ 새 상품 등록</NuxtLink>
       </div>
   
-      <div v-if="products.length > 0" class="product-list">
+      <div v-if="products.length > 0" class="product-grid">
         <div v-for="product in products" :key="product.id" class="product-item">
-          <h3>{{ product.name }}</h3>
-          <p>{{ product.description }}</p>
+          <h3>{{ product.defaultName }}</h3>
+          <p>{{ product.productCode }}</p>
           <div class="meta">
-            <span>₩{{ product.price.toLocaleString() }}</span>
+            <!-- <img 
+                v-if="product.mainImage && product.mainImage.fileUrl" 
+                :src="product.mainImage.fileUrl" 
+                alt="메인 이미지" 
+                class="thumbnail"
+                /> -->
             <button class="edit-btn">수정</button>
           </div>
         </div>
       </div>
   
-      <div v-else class="no-data">
-        등록된 상품이 없습니다.
-      </div>
+      <div v-else class="no-data">등록된 상품이 없습니다.</div>
+  
+      <!-- 페이지네이션 -->
+      <nav class="pagination">
+        <button
+          v-for="p in totalPages"
+          :key="p"
+          :class="{ active: page === p }"
+          @click="goToPage(p)">
+          {{ p }}
+        </button>
+      </nav>
     </div>
   </template>
   
-  <script setup>
+  <script setup lang="ts">
+
     definePageMeta({ layout: 'seller' })
   import { ref, onMounted } from 'vue'
   import { useAuth } from '@/composables/useAuth'
-  
+  import { fetchWithAuth } from '@/utils/fetchWithAuth'
+
+  const config = useRuntimeConfig()
+
   const products = ref([])
-  const auth = useAuth()
-  
-  onMounted(async () => {
-    try {
-      const res = await fetch('/api/v1/seller/products', {
-        credentials: 'include'
-      })
-      const data = await res.json()
-      if (res.ok) {
-        products.value = data.data
+const currentPage = ref(1)
+const totalPages = ref(0)
+const pageSize = 20
+
+const fetchProducts = async (page = 1) => {
+  try {
+    const data = await fetchWithAuth<{
+      success: boolean,
+      data: {
+        content: Product[]
+        totalPages: number
       }
-    } catch (err) {
-      console.error('상품 목록 불러오기 실패', err)
+    }>(
+      `${config.public.apiBase}/api/v1/products/all?page=${page - 1}&size=${pageSize}`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    if (data.success) {
+      products.value = data.data.content;
+      totalPages.value = data.data.totalPages;
+      currentPage.value = page;
+    } else {
+      console.error('상품 목록 응답 에러', data);
     }
-  })
-  
-  definePageMeta({ layout: 'seller' })
+  } catch (err) {
+    console.error('상품 목록 불러오기 실패', err);
+  }
+};
+
+const goToPage = (page: number) => {
+  if (page !== currentPage.value) fetchProducts(page)
+}
+
+onMounted(() => {
+  fetchProducts(1)
+})
+
   </script>
   
   <style scoped>
@@ -105,4 +146,38 @@
     padding: 40px;
     font-size: 16px;
   }
+
+  .product-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* 5열 */
+  gap: 20px;
+  margin-top: 2rem;
+}
+
+.product-item {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.pagination {
+  margin-top: 2rem;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination button.active {
+  background: #333;
+  color: white;
+  font-weight: bold;
+}
   </style>

@@ -3,29 +3,34 @@ package com.user.config.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.user.server.redis.RedisUserRefreshRepository;
 import com.user.server.user.entity.User;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.Date;
 
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 //@Profile("!test")
 public class JwtTokenProvider {
 
 //    @Value("${jwt.secret}")
     private String secretKey = "123";
 
-    // 예: 15분
-    private static final long ACCESS_TOKEN_EXPIRATION = 15 * 60 * 1000L;
-    // 예: 7일
-    private static final long REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000L;
+    private static final Duration ACCESS_TOKEN_EXPIRATION = Duration.ofMinutes(15);
+    private static final Duration REFRESH_TOKEN_EXPIRATION = Duration.ofDays(7);
+
+    private final RedisUserRefreshRepository redisUserRefreshRepository;
 
     private Algorithm algorithm;
 
@@ -46,7 +51,7 @@ public class JwtTokenProvider {
                 .withClaim("userName", userName)
                 .withClaim("uid", uid)
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
+                .withExpiresAt(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION.toMillis()))
                 .sign(algorithm);
     }
 
@@ -58,7 +63,7 @@ public class JwtTokenProvider {
         return JWT.create()
                 .withSubject(userId)
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION))
+                .withExpiresAt(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION.toMillis()))
                 .sign(algorithm);
     }
 
@@ -82,4 +87,45 @@ public class JwtTokenProvider {
             return 0L;
         }
     }
+
+    public boolean isExpired(String token) {
+        try {
+            DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(secretKey))
+                    .build()
+                    .verify(token);
+
+            Date expiresAt = decodedJWT.getExpiresAt();
+            return expiresAt.before(new Date());
+        } catch (TokenExpiredException e) {
+            return true;
+        } catch (Exception e) {
+            log.error("[JwtTokenProvider] 토큰 만료 검사 실패: {}", e.getMessage());
+            return true;
+        }
+    }
+
+    public boolean validateRefreshToken(String refreshToken) {
+        try {
+            DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(secretKey))
+                    .build()
+                    .verify(refreshToken);
+
+            String userId = decodedJWT.getClaim("userId").asString();
+
+            String storedToken = redisUserRefreshRepository.getRefreshToken(userId);
+            return storedToken != null && storedToken.equals(refreshToken);
+
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String getUserIdFromRefreshToken(String refreshToken) {
+        DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(secretKey))
+                .build()
+                .verify(refreshToken);
+        return decodedJWT.getClaim("userId").asString();
+    }
+
+
 }

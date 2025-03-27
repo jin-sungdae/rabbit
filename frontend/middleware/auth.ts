@@ -7,9 +7,9 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
     console.log('aaaaaa', auth.userName.value)
   
-    if (!auth.isLoggedIn.value) {
-      return navigateTo('/login')
-    }
+    // if (!auth.isLoggedIn.value) {
+    //   return navigateTo('/login')
+    // }
   
     if (to.path.startsWith('/seller') && auth.userType.value !== 'SELLER') {
       return navigateTo('/mypage')

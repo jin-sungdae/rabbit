@@ -17,7 +17,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
     const data = await response.json();
 
-    console.log(data)
+    console.log('ㅑㅑㅑ', data)
 
     if (response.ok && data.success) {
       auth.isLoggedIn.value = true
