@@ -20,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -29,16 +30,33 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
     private final RedisUserRefreshRepository redisUserRefreshRepository;
 
+    private static final List<String> WHITE_LIST = List.of(
+            "/public/",
+            "/login",
+            "/logout",
+            "/oauth2",
+            "/login/oauth2/code/",
+            "/refresh",
+            "/api/v1/user/login",
+            "/api/v1/user/register",
+            "/favicon.ico",
+            "/api/v1/common/"
+    );
+
+    private boolean isWhitelist(String uri) {
+        return WHITE_LIST.stream().anyMatch(uri::startsWith);
+    }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         String uri = request.getRequestURI();
 
-        if (uri.startsWith("/public/") || uri.startsWith("/login") || uri.startsWith("/api/v1/user/login") || uri.startsWith("/oauth2") || uri.startsWith("/login/oauth2/code/") || uri.startsWith("/refresh")) {
+        if (isWhitelist(uri)) {
             chain.doFilter(request, response);
             return;
         }
+
         String jwtHeader = resolveTokenFromRequest(request);
 
         if (jwtHeader == null || !jwtHeader.startsWith("Bearer ")) {
