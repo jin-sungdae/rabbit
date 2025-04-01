@@ -1,9 +1,7 @@
-package com.user.server.config.security;
+package com.user.config.security;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.user.config.security.JwtAuthorizationFilter;
-import com.user.config.security.JwtTokenProvider;
 import com.user.server.redis.RedisUserRefreshRepository;
 import com.user.server.user.entity.User;
 import com.user.server.user.repository.UserRepository;

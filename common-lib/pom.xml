@@ -80,7 +80,12 @@
             <version>6.4.2.RELEASE</version>
         </dependency>
 
-
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- (Optional) Jedis를 사용하려면 추가 -->
         <dependency>

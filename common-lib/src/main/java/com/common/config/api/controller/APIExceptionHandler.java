@@ -2,8 +2,10 @@ package com.common.config.api.controller;
 
 
 import com.common.config.api.apidto.APIErrorResponse;
+import com.common.config.api.exception.ForbiddenAccessException;
 import com.common.config.api.exception.GeneralException;
 
+import com.common.config.api.exception.ProductNotFoundException;
 import com.sun.jdi.InternalException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +40,16 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR;
 
         return callSuperInternalExceptionHandler(e, HttpHeaders.EMPTY, status, request);
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<Object> productNotFound(ProductNotFoundException e, WebRequest request) {
+        return callSuperInternalExceptionHandler(e, HttpHeaders.EMPTY, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(ForbiddenAccessException.class)
+    public ResponseEntity<Object> forbiddenAccess(ForbiddenAccessException e, WebRequest request) {
+        return callSuperInternalExceptionHandler(e, HttpHeaders.EMPTY, HttpStatus.FORBIDDEN, request);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -84,6 +96,7 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
         APIErrorResponse errorResponse = APIErrorResponse.of(status);
 
 
+        log.error("APIExceptionHandler==============", e);
 
         return new ResponseEntity<>(errorResponse, headers, status);
     }

@@ -23,28 +23,6 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @PostMapping("/register")
-    public APIDataResponse<String> registerProduct(
-            @AuthenticationPrincipal PrincipalDetails principalDetails,
-            @RequestBody RequestProductDto product) {
-
-        String productUid = productService.registerProduct(product, principalDetails.getUser());
-
-        return APIDataResponse.of(productUid);
-    }
-
-    @GetMapping("/all")
-    public APIDataResponse<Page<ResponseProductDto>> getAllProducts(
-            @AuthenticationPrincipal PrincipalDetails principalDetails,
-            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-
-        return APIDataResponse.of(productService.getAllProducts(principalDetails.getUser(), pageable));
-    }
-
-
-
-
     @GetMapping("/featured")
     public APIDataResponse<List<ResponseProductDto>> getFeaturedProducts() {
         List<ResponseProductDto> featuredProducts = productService.getFeaturedProducts();

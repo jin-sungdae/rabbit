@@ -61,6 +61,7 @@ public class FileController {
             Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
 
             Product product = productService.getProduct(parentUid);
+
             File file = File.builder()
                     .fileName(filename)
                     .parentUid(parentUid)

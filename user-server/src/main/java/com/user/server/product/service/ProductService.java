@@ -1,6 +1,8 @@
 package com.user.server.product.service;
 
+import com.common.config.api.constant.ErrorCode;
 import com.common.config.api.exception.GeneralException;
+import com.common.config.api.exception.ProductNotFoundException;
 import com.user.server.product.dto.RequestProductDto;
 import com.user.server.product.dto.ResponseProductDto;
 import com.user.server.product.entity.Product;
@@ -85,4 +87,8 @@ public class ProductService {
     }
 
 
+    public ResponseProductDto getProductByProductId(Long productId) {
+        return ResponseProductDto.from(productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException()));
+    }
 }

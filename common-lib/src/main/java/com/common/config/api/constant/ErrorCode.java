@@ -24,8 +24,9 @@ public enum ErrorCode {
 
     DATA_ACCESS_ERROR(20002, ErrorCategory.SERVER_SIDE, "Data access error"),
     DATA_DUPLICATION_ERROR(20003, ErrorCategory.SERVER_SIDE, "Data duplication error"),
-    DATA_API_ERROR(20004, ErrorCategory.SERVER_SIDE, "external API error")
-            ;
+    DATA_API_ERROR(20004, ErrorCategory.SERVER_SIDE, "external API error"),
+    NOT_FOUND_PRODUCT(20005, ErrorCategory.SERVER_SIDE , "not found Production" ),
+    FORBIDDEN(20006, ErrorCategory.SERVER_SIDE, "forbidden access"),;
 
 
     private final Integer code;
