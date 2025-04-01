@@ -10,17 +10,32 @@ JPA 기반 도메인 모델링, JWT 인증, OAuth 연동, Redis 캐시, Docker �
 
 ## ✅ 프로젝트 목표
 
-- 이커머스 도메인에 최적화된 JPA 기반 백엔드 시스템 설계
-- 인증/권한/캐싱 처리 등 실무 수준 기능 완전 구현
-- OAuth (Google, Kakao, Naver) 통합 로그인 기능
-- Redis 기반 Refresh Token 캐시 + 인증 실패 제어 + Blacklist 처리
-- Exponential Backoff 로그인 차단 정책
-- JWT 기반 인증 구조 + 로그인 실패 횟수 제어 + 영구 잠금 전략
-- Role 기반 인증 및 마이페이지 접근 제어 (BUYER/SELLER 분리)
-- SELLER 전환 신청 기능 및 판매자 정보 등록 기능
-- Docker 기반 CI/CD 준비 (Nuxt + Spring Boot + Nginx + Redis)
-- K6 기반 부하 테스트
-  
+**1.	이커머스 도메인에 최적화된 JPA 설계**
+  - 엔티티 간의 명확한 관계 설정과 영속성 컨텍스트 활용으로, 대규모 트랜잭션 처리에서도 일관성과 확장성을 확보합니다.
+    
+**2.	JWT + OAuth2 기반 권한 위임 및 역할 인증**
+  - Google, Kakao, Naver 등 OAuth2 인증을 통해 사용자 정보를 위임받고, 내부적으로는 JWT를 발급하여 BUYER/SELLER 등 Role별 접근 권한을 세분화합니다.
+  - 로그인 이후 관리자 또는 판매자로 Role 변경 시, 기존 세션/토큰을 무효화하고 새로운 권한이 반영된 토큰을 재발급하는 로직을 구현해, 보안성을 극대화합니다.
+
+**3.	Redis 기반 AccessToken/RefreshToken 관리 및 인증 실패 제어**
+  - RefreshToken을 Redis에 저장하고 TTL을 부여해 자동 만료 처리하며, AccessToken은 만료 또는 재발급 시 Redis 블랙리스트(Blacklist) 방식을 활용해 즉시 무효화가 가능합니다.
+  - 로그인이 반복 실패되는 경우, Redis를 통해 실패 횟수 및 잠금 상태를 추적하고 Exponential Backoff 정책을 적용해 보안 침해 시도를 적극 방어합니다.
+    
+**4.	Nginx 기반 RateLimit 및 트래픽 제어**
+  - Nginx에서 IP 혹은 JWT Claims 단위의 RateLimit을 설정해, 악성 트래픽이나 과도한 요청으로부터 서버를 보호합니다.
+  -	향후 Resilience4j 등과 연계해 내부 API RateLimit도 처리 가능하도록 확장성을 고려합니다.
+    
+**5.	Blue-Green 기반 CI/CD 파이프라인 준비**
+  -	Docker, Nginx, Spring Boot 등으로 구성된 환경에서 블루-그린 배포 전략을 사용해 무중단 배포를 지원합니다.
+  -	GitHub Actions 또는 Jenkins와 연동하여 자동화 테스트 후 안정적으로 버전을 스위칭, 가용성을 높입니다.
+    
+**6.	K6 기반 부하(성능) 테스트**
+  -	K6를 활용해 대량의 동시 요청 시나리오를 시뮬레이션하고, Latency, Throughput, Error Rate 등을 모니터링하여 시스템 병목 지점을 사전에 식별·개선합니다.
+    
+**7.	TDD 기반 코드 품질 관리**
+  -	모든 백엔드 로직은 JUnit5를 기반으로 유닛 테스트를 작성하고, Mockito, RestAssured, TestContainers 등으로 통합 테스트까지 반복 검증하며, 안정적이고 유지보수 가능한 코드를 유지합니다.
+  -	작은 단위로 테스트를 작성하고, Red-Green-Refactor 과정을 엄격하게 준수하여 기능 구현 과정에서 결함을 최소화하고 리팩토링 효율을 극대화합니다.
+
 ---
 
 ## ⚙️ 기술 스택
