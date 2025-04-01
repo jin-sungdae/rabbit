@@ -2,9 +2,9 @@
 # 🛒 E-commerce Backend System (Spring Boot 기반)
 
 
-이 프로젝트는 이커머스 도메인을 기반으로 설계된 실무 지향 백엔드 시스템으로, 면접 및 대규모 서비스 아키텍처 대응을 목표로 구현되었습니다.
+이 프로젝트는 이커머스 도메인을 기반으로 한 실무 지향 백엔드 시스템입니다. TDD(Test-Driven Development) 방식을 통해 코드 품질을 지속적으로 향상하며, 대규모 서비스 환경에서도 확장 가능하도록 설계된 구조를 지향합니다.
 
-JPA 기반 도메인 모델링, JWT 인증, OAuth 연동, Redis 캐시, Docker 환경 구성, 테스트 전략 수립 등 실전 프로젝트에서 요구되는 구조를 포괄합니다.
+JPA 기반 도메인 모델링, JWT 인증, OAuth 연동, Redis 캐시, Docker 환경 구성, 테스트 전략 수립 등 실제 프로덕션에서 요구되는 핵심 기능들을 포괄하며, 테스트 케이스는 test 폴더에 체계적으로 관리하고 있습니다.
 
 ---
 
@@ -19,8 +19,7 @@ JPA 기반 도메인 모델링, JWT 인증, OAuth 연동, Redis 캐시, Docker �
 - Role 기반 인증 및 마이페이지 접근 제어 (BUYER/SELLER 분리)
 - SELLER 전환 신청 기능 및 판매자 정보 등록 기능
 - Docker 기반 CI/CD 준비 (Nuxt + Spring Boot + Nginx + Redis)
-- Resilience4j 기반 Rate Limiting 및 API 보호 적용
-- RestAssured + TestContainers 기반 테스트 전략 설계
+- K6 기반 부하 테스트
   
 ---
 
@@ -108,12 +107,10 @@ http://localhost:8080/swagger-ui/index.html
  ├ /user           - 사용자 도메인 (엔티티, 서비스, 컨트롤러, DTO)
  ├ /product        - 상품 관련 도메인
  ├ /order          - 주문 관련 도메인
- ├ /seller         - 판매자 신청 및 프로필 관리
- ├ /global         - 전역 응답, 예외처리, 인터셉터
- ├ /redis          - Redis 기반 리포지토리 계층
- ├ /config         - Spring Config, Security 설정, Filter 등록
- ├ /support        - 테스트 전용 어노테이션, SecurityContextFactory
- ├ /test           - RestAssured 및 단위 테스트 모듈
+ ├ /store          - 판매자 상품 관리 도메인
+ ├ /catalog        - 상품 조회
+/config            - Spring Config, Security 설정, Filter 등록
+/test              - 단위 테스트
 ```
 
 ---
