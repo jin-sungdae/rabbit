@@ -16,6 +16,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.InvalidParameterException;
+
 @RestController
 @RequestMapping("/api/v1/stores/{storeId}/products")
 @RequiredArgsConstructor
@@ -26,8 +28,22 @@ public class StoreProductController {
 
     @PostMapping("/register")
     public APIDataResponse<String> registerProduct(
+            @PathVariable Long storeId,
             @AuthenticationPrincipal PrincipalDetails principalDetails,
-            @RequestBody RequestProductDto product) {
+            @RequestBody RequestProductDto product
+    ) {
+
+        if (storeId <= 0) {
+            throw new InvalidParameterException("storeId는 양수여야 합니다.");
+        }
+
+        if(!principalDetails.getUser().getRole().toString().equals("SELLER")) {
+            throw new ForbiddenAccessException("판매자만 상품을 등록할 수 있습니다.");
+        }
+
+        if (!principalDetails.getUser().getSellerProfile().getId().equals(storeId)) {
+            throw new ForbiddenAccessException("다른 상점에서 상품을 등록할 수 없습니다.");
+        }
 
         String productUid = storeProductService.registerProduct(product, principalDetails.getUser());
 
@@ -36,9 +52,18 @@ public class StoreProductController {
 
     @GetMapping("/all")
     public APIDataResponse<Page<ResponseProductDto>> getAllProducts(
+            @PathVariable Long storeId,
             @AuthenticationPrincipal PrincipalDetails principalDetails,
             @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
+
+        if (!principalDetails.getUser().getRole().toString().equals("SELLER")) {
+            throw new ForbiddenAccessException("판매자만 접근할 수 있습니다.");
+        }
+
+        if (!principalDetails.getUser().getSellerProfile().getId().equals(storeId)) {
+            throw new ForbiddenAccessException("본인의 상점만 조회할 수 있습니다.");
+        }
 
         return APIDataResponse.of(storeProductService.getAllProducts(principalDetails.getUser(), pageable));
     }
@@ -49,25 +74,33 @@ public class StoreProductController {
             @PathVariable Long productId,
             @AuthenticationPrincipal PrincipalDetails principal
     ) {
-        if (!principal.getStoreId().equals(storeId)) {
+        if (storeId <= 0 || productId <= 0) {
+            throw new InvalidParameterException("storeId와 productId는 양수여야 합니다.");
+        }
+
+        if (!principal.getUser().getSellerProfile().getId().equals(storeId)) {
             throw new ForbiddenAccessException("다른 상점의 상품은 조회할 수 없습니다.");
         }
 
-        return APIDataResponse.of(storeProductService.getProduct(productId));
+        if (!principal.getUser().getRole().toString().equals("SELLER")) {
+            throw new ForbiddenAccessException("판매자만 조회할 수 있습니다.");
+        }
+
+        return APIDataResponse.of(storeProductService.getProductByProductId(productId));
     }
 
     @PutMapping("/{productId}")
-    public APIDataResponse<?> updateProduct(
+    public APIDataResponse<String> updateProduct(
             @PathVariable Long storeId,
             @PathVariable Long productId,
             @AuthenticationPrincipal PrincipalDetails principal,
             @RequestBody ProductUpdateRequest request
     ) {
-        if (!principal.getStoreId().equals(storeId)) {
+        if (!principal.getUser().getSellerProfile().getId().equals(storeId)) {
             throw new ForbiddenAccessException("다른 상점의 상품은 수정할 수 없습니다.");
         }
 
         storeProductService.update(storeId, productId, request);
-        return APIDataResponse.success();
+        return APIDataResponse.of(Boolean.toString(true));
     }
 }

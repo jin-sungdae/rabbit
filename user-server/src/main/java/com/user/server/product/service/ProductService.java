@@ -47,12 +47,6 @@ public class ProductService {
                 .stream().map(ResponseProductDto::from).collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public Page<ResponseProductDto> getAllProducts(User user, Pageable pageable) {
-        Page<Product> products = productRepository.findAllByUserUid(user.getUid(), pageable);
-
-        return products.map(ResponseProductDto::from);
-    }
 
     @Transactional(readOnly = true)
     public Product getProduct(String productUid) {
@@ -66,29 +60,8 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
-    public String registerProduct(RequestProductDto requestProductDto, User user) {
-        try {
-            String uid = RandomStringUtils.randomAlphanumeric(16);
-
-            SellerProfile seller = sellerProfileRepository.findByUserUid(user.getUid())
-                    .orElseThrow(() -> new GeneralException("판매자 정보가 없습니다."));
 
 
-            Product product = productRepository.save(requestProductDto.toEntity(user.getId(), uid, seller));
-            productRepository.save(product);
-
-            return uid;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-        }
-
-    }
 
 
-    public ResponseProductDto getProductByProductId(Long productId) {
-        return ResponseProductDto.from(productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException()));
-    }
 }

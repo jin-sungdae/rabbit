@@ -21,6 +21,8 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.security.InvalidParameterException;
+
 
 @RestControllerAdvice(annotations = RestController.class)
 @Slf4j
@@ -86,6 +88,11 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
         return callSuperInternalExceptionHandler(e, HttpHeaders.EMPTY, HttpStatus.INTERNAL_SERVER_ERROR, webRequest);
     }
 
+    @ExceptionHandler(InvalidParameterException.class)
+    public ResponseEntity<Object> handleInvalidParameterException(InvalidParameterException e, WebRequest webRequest) {
+        return callSuperInternalExceptionHandler(e, HttpHeaders.EMPTY, HttpStatus.BAD_REQUEST, webRequest);
+    }
+
 
     private ResponseEntity<Object> callSuperInternalExceptionHandler(
             Exception e,
@@ -94,8 +101,6 @@ public class APIExceptionHandler extends ResponseEntityExceptionHandler {
             WebRequest webRequest
     ) {
         APIErrorResponse errorResponse = APIErrorResponse.of(status);
-
-
         log.error("APIExceptionHandler==============", e);
 
         return new ResponseEntity<>(errorResponse, headers, status);
