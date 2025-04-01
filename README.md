@@ -95,21 +95,8 @@ http://localhost:8080/swagger-ui/index.html
 - 통합 테스트: @SpringBootTest + TestContainers 기반 통합 검증
 - API 테스트: RestAssured 를 통한 컨트롤러 시나리오 테스트
 - 보안 테스트: 로그인 실패, 영구잠금, 인증 실패, Redis TTL 검사 등 포함
-- RateLimit 테스트: Resilience4j 기반 5초 내 2회 이상 호출 시 429 반환 확인
+- RateLimit 테스트: K6 기반 10초 내 6회 이상 호출 시 429 반환 확인
 - 프론트 테스트: 로그인 상태 유지, role 기반 라우팅 확인, `/me` 응답 기반 클라이언트 상태 초기화 검증
-
----
-
-## 📊 MyBatis → JPA 변경 비교 실험
-
-| 항목 | JPA 방식 |
-|------|---------------|
-| 쿼리 작성 | Repository + QueryDSL / Specification |
-| 복잡한 Join  | Fetch Join / Native Query 활용 |
-| 유지보수성 | 높음 (타입 안정성) |
-| 동적 쿼리 | Criteria, Specification |
-
-> 실험 결과 및 성능 비교 리포트는 `/docs/orm-analysis.md`에서 확인 예정입니다.
 
 ---
 
