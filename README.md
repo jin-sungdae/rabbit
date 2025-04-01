@@ -1,5 +1,5 @@
 
-# 🛒 E-commerce Backend System (Spring Boot 기반)
+# 🛒 E-commerce
 
 
 이 프로젝트는 이커머스 도메인을 기반으로 한 실무 지향 백엔드 시스템입니다. TDD(Test-Driven Development) 방식을 통해 코드 품질을 지속적으로 향상하며, 대규모 서비스 환경에서도 확장 가능하도록 설계된 구조를 지향합니다.
