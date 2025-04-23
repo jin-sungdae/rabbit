@@ -5,6 +5,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.user.server.redis.RedisUserRefreshRepository;
 import com.user.server.user.entity.User;
 import com.user.server.user.repository.UserRepository;
+import com.user.server.user.service.BlacklistTokenService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,12 +13,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.io.IOException;
+import java.time.Duration;
 
 import static org.mockito.BDDMockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,8 +38,18 @@ class JwtAuthorizationFilterTest {
     @Mock
     private RedisUserRefreshRepository redisUserRefreshRepository;
 
+    @Mock
+    private BlacklistTokenService blacklistTokenService;
+
     @InjectMocks
     private JwtAuthorizationFilter jwtAuthorizationFilter;
+
+
+    @Mock
+    private RedisTemplate<String, String> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, String> valueOperations;
 
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
@@ -46,6 +61,8 @@ class JwtAuthorizationFilterTest {
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
         filterChain = new MockFilterChain();
+
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
     }
 
     @Test
@@ -297,4 +314,30 @@ class JwtAuthorizationFilterTest {
         // assertEquals(404, response.getStatus());
         // 와 같은 검증을 할 수도 있음
     }
+
+    @Test
+    @DisplayName("token이 blackList에 있을 경우 401 을 반환한다.")
+    void shouldReturn401WhenTokenIsBlacklisted() throws IOException, ServletException {
+        // given
+        String jti = "jti-123";
+        String token = "fake.jwt.token";
+
+        request.addHeader("Authorization", "Bearer " + token);
+
+
+        DecodedJWT jwt = mock(DecodedJWT.class);
+        given(jwtTokenProvider.parseClaims(token)).willReturn(jwt);
+        given(jwt.getId()).willReturn(jti);
+        given(jwtTokenProvider.getJti(token)).willReturn(jti);
+        given(blacklistTokenService.isBlacklisted(jti)).willReturn(true);
+
+        // when
+        jwtAuthorizationFilter.doFilterInternal(request, response, filterChain);
+
+        // then
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus());
+        assertEquals("Token blacklisted", response.getErrorMessage()); // getErrorMessage()가 null이면 생략
+    }
+
+
 }

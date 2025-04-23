@@ -63,6 +63,14 @@ public class UserApiController {
                 .maxAge(Duration.ofMinutes(2))
                 .build();
 
+        ResponseCookie csrfCookie = ResponseCookie.from("csrfToken", accessToken)
+                .httpOnly(false)
+                .secure(true)
+                .path("/")
+                .sameSite("Strict")
+                .maxAge(Duration.ofMinutes(2))
+                .build();
+
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
@@ -74,6 +82,7 @@ public class UserApiController {
 
         response.addHeader("Set-Cookie", cookie.toString());
         response.addHeader("Set-Cookie", refreshCookie.toString());
+        response.addHeader("Set-Cookie", csrfCookie.toString());
 
         // 4. user info redis 에 저장
         userService.saveUserInfoByCache(user.getUid());
@@ -124,6 +133,14 @@ public class UserApiController {
                     .maxAge(0)
                     .build();
 
+            ResponseCookie expireCsrf = ResponseCookie.from("csrfToken", "")
+                    .httpOnly(false)
+                    .secure(true)
+                    .path("/")
+                    .sameSite("Strict")
+                    .maxAge(0)
+                    .build();
+
             ResponseCookie expiredRefresh = ResponseCookie.from("refreshToken", "")
                     .httpOnly(true)
                     .secure(true)
@@ -133,6 +150,7 @@ public class UserApiController {
                     .build();
 
             response.addHeader("Set-Cookie", expiredAccess.toString());
+            response.addHeader("Set-Cookie", expireCsrf.toString());
             response.addHeader("Set-Cookie", expiredRefresh.toString());
 
             return APIDataResponse.of("true", "로그아웃 성공");

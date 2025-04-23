@@ -5,6 +5,7 @@ import com.user.server.redis.RedisUserRefreshRepository;
 import com.user.server.user.entity.Role;
 import com.user.server.user.entity.User;
 import com.user.server.user.repository.UserRepository;
+import com.user.server.user.service.BlacklistTokenService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,6 +30,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final RedisUserRefreshRepository redisUserRefreshRepository;
+    private final BlacklistTokenService blacklistTokenService;
 
     private static final List<String> WHITE_LIST = List.of(
             "/public/",
@@ -66,6 +68,12 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
         try {
             String token = jwtHeader.replace("Bearer ", "");
+
+            String jti = jwtTokenProvider.getJti(token);
+            if (blacklistTokenService.isBlacklisted(jti)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token blacklisted");
+                return;
+            }
 
             if (jwtTokenProvider.isExpired(token)) {
                 String refreshToken = resolveRefreshTokenFromRequest(request);

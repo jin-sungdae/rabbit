@@ -10,6 +10,7 @@ import java.util.Random;
 
 @Getter
 @Setter
+@Builder
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class RequestUser {

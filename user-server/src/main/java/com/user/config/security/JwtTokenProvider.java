@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.UUID;
 
 
 @Component
@@ -43,13 +44,17 @@ public class JwtTokenProvider {
         return createAccessToken(user.getUserId(), user.getRole().name(), user.getUserName(), user.getUid());
     }
 
+
     public String createAccessToken(String userId, String role, String userName, String uid) {
+        String jti = UUID.randomUUID().toString();
+
         return JWT.create()
                 .withSubject(userId)
                 .withClaim("userId", userId)
                 .withClaim("roles", role)
                 .withClaim("userName", userName)
                 .withClaim("uid", uid)
+                .withClaim("jti", jti)
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION.toMillis()))
                 .sign(algorithm);
@@ -128,4 +133,9 @@ public class JwtTokenProvider {
     }
 
 
+    public String getJti(String token) {
+
+        DecodedJWT decodedJWT = parseClaims(token);
+        return decodedJWT.getClaim("jti").asString();
+    }
 }

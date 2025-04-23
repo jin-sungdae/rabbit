@@ -1,5 +1,6 @@
 package com.user.server.user.service;
 
+import com.user.config.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 public class BlacklistTokenService {
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final JwtTokenProvider jwtTokenProvider;
 
     private static final String BLACKLIST_KEY_PREFIX = "blacklist:";
 
@@ -28,7 +30,13 @@ public class BlacklistTokenService {
             return;
         }
 
-        String key = BLACKLIST_KEY_PREFIX + accessToken;
+        String jti = jwtTokenProvider.getJti(accessToken);
+        if (jti == null || jti.isBlank()) {
+            log.warn("[Blacklist] Failed to extract jti from token");
+            return;
+        }
+
+        String key = BLACKLIST_KEY_PREFIX + jti;
 
         // 남은 만료 시간 동안 "blacklisted"라는 값을 저장
         redisTemplate.opsForValue().set(key, "blacklisted", remainingExpiration, TimeUnit.MILLISECONDS);
@@ -39,8 +47,8 @@ public class BlacklistTokenService {
     /**
      * 블랙리스트 여부 확인
      */
-    public boolean isBlacklisted(String accessToken) {
-        String key = BLACKLIST_KEY_PREFIX + accessToken;
+    public boolean isBlacklisted(String jti) {
+        String key = BLACKLIST_KEY_PREFIX + jti;
         return redisTemplate.hasKey(key);
     }
 }

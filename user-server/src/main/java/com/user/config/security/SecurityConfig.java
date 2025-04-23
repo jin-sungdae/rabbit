@@ -3,6 +3,7 @@ package com.user.config.security;
 
 import com.user.server.redis.RedisUserRefreshRepository;
 import com.user.server.user.repository.UserRepository;
+import com.user.server.user.service.BlacklistTokenService;
 import com.user.server.user.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final UserRepository userRepository;
     private final RedisUserRefreshRepository redisUserRefreshRepository;
+    private final BlacklistTokenService blacklistTokenService;
 
     @Bean
     @Order(1)
@@ -67,7 +69,7 @@ public class SecurityConfig {
                 })
                 .and()
                 .addFilterBefore(corsConfig.corsFilter(), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new JwtAuthorizationFilter(jwtTokenProvider, userRepository, redisUserRefreshRepository), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthorizationFilter(jwtTokenProvider, userRepository, redisUserRefreshRepository, blacklistTokenService), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/refresh",
