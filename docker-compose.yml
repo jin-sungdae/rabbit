@@ -7,6 +7,7 @@ networks:
 
 services:
   common-lib:
+    image: jin-sungdae/common-lib:latest
     build:
       context: .
       dockerfile: common-lib/Dockerfile
