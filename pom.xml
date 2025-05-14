@@ -9,11 +9,11 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>notification-server</module>
-        <module>notification-worker-server</module>
+        <!-- <module>notification-server</module>
+        <module>notification-worker-server</module> -->
         <module>common-lib</module>
         <module>user-server</module>
-        <module>admin-server</module>
+        <!-- <module>admin-server</module> -->
     </modules>
 
     <dependencyManagement>
