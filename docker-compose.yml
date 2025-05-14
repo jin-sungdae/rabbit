@@ -7,7 +7,7 @@ networks:
 
 services:
   common-lib:
-    image: jin-sungdae/common-lib:latest
+    image: 233777024181.dkr.ecr.ap-northeast-2.amazonaws.com/sjin/docker/common-lib:latest
     build:
       context: .
       dockerfile: common-lib/Dockerfile
