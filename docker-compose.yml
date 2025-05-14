@@ -21,6 +21,7 @@ services:
     build:
       context: .
       dockerfile: user-server/Dockerfile
+    image: 233777024181.dkr.ecr.ap-northeast-2.amazonaws.com/sjin/docker/test
     container_name: user-server1
     depends_on:
       common-lib:
