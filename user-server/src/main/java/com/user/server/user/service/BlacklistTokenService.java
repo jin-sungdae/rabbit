@@ -36,7 +36,6 @@ public class BlacklistTokenService {
             return;
         }
 
-
         String key = BLACKLIST_KEY_PREFIX + jti;
 
         // 남은 만료 시간 동안 "blacklisted"라는 값을 저장
